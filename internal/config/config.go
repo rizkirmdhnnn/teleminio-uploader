@@ -23,8 +23,9 @@ type Config struct {
 	MinioRegion    string
 	MinioEndpoint  string
 
-	AUTO_REMOVE_MEDIA bool
-	WORKER_POOL       string
+	AUTO_REMOVE_MEDIA  bool
+	WORKER_POOL        string
+	SEND_INFO_UPLOADED bool
 }
 
 // LoadConfig loads configuration from environment variables.
@@ -57,7 +58,8 @@ func LoadConfig() Config {
 		MinioRegion:    os.Getenv("MINIO_REGION"),
 		MinioEndpoint:  os.Getenv("MINIO_ENDPOINT"),
 
-		AUTO_REMOVE_MEDIA: os.Getenv("AUTO_REMOVE_MEDIA") == "true",
-		WORKER_POOL:       os.Getenv("WORKER_POOL"),
+		AUTO_REMOVE_MEDIA:  os.Getenv("AUTO_REMOVE_MEDIA") == "true",
+		WORKER_POOL:        os.Getenv("WORKER_POOL"),
+		SEND_INFO_UPLOADED: os.Getenv("SEND_INFO_UPLOADED") == "true",
 	}
 }

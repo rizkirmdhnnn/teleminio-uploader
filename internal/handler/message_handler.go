@@ -132,6 +132,10 @@ func (h *MessageHandler) handleMedia(ctx context.Context, media tg.MessageMediaC
 		}
 	}
 
-	h.Sender.Self().Text(ctx, fmt.Sprintf("File uploaded to %s", url))
+	if h.Config.SEND_INFO_UPLOADED {
+		h.Sender.Self().Text(ctx, fmt.Sprintf("File uploaded to %s", url))
+	}
+
+	fmt.Printf("File %s uploaded to %s\n", fileInfo.Name(), url)
 	return nil
 }
