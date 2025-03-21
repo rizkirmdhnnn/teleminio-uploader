@@ -80,6 +80,14 @@ func start(ctx context.Context, cfg config.Config, clientSetup *client.Setup) er
 		}
 		fmt.Println("Current user:", name)
 
+		// // Fill peer storage
+		// fmt.Println("Filling peer storage from dialogs to cache entities")
+		// collector := storage.CollectPeers(s.PeerDB)
+		// if err := collector.Dialogs(ctx, query.GetDialogs(clientSetup.API).Iter()); err != nil {
+		// 	return errors.Wrap(err, "collect peers")
+		// }
+		// fmt.Println("Filled")
+
 		// Start listening for updates
 		fmt.Println("Listening for updates. Interrupt (Ctrl+C) to stop.")
 		return clientSetup.UpdatesManager.Run(ctx, clientSetup.API, self.ID, updates.AuthOptions{
