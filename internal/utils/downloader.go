@@ -115,7 +115,14 @@ func (m *MediaDownloader) DownloadMedia(ctx context.Context, media tg.MessageMed
 	case *tg.MessageMediaDocument:
 		doc := med.Document.(*tg.Document)
 		file, err := m.DownloadDocument(ctx, doc, username)
-		return file, doc.GetMimeType(), err
+		mediaTypeDir := "document"
+		for _, attr := range doc.Attributes {
+			if _, ok := attr.(*tg.DocumentAttributeVideo); ok {
+				mediaTypeDir = "video"
+				break
+			}
+		}
+		return file, mediaTypeDir, err
 	default:
 		return "", "", fmt.Errorf("unsupported media type")
 	}
