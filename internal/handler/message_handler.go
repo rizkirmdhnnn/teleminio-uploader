@@ -19,6 +19,7 @@ type MessageHandler struct {
 	Minio      *store.MinioClient
 	PeerDB     storage.PeerStorage
 	UserTarget []string
+	workerPool chan struct{}
 }
 
 // NewMessageHandler creates a new message handler
@@ -28,6 +29,7 @@ func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClie
 		Minio:      minio,
 		PeerDB:     peerDB,
 		UserTarget: userTarget,
+		workerPool: make(chan struct{}, 5), // Allow 5 concurrent operations
 	}
 }
 
@@ -57,7 +59,21 @@ func (h *MessageHandler) HandleNewMessage(ctx context.Context, e tg.Entities, u 
 
 	// Process media if present
 	if msg.Media != nil {
-		return h.handleMedia(ctx, msg.Media, p.User.Username)
+		// Acquire a worker from the pool
+		h.workerPool <- struct{}{}
+
+		// Process media concurrently
+		go func() {
+			defer func() {
+				// Release the worker back to the pool
+				<-h.workerPool
+			}()
+
+			err := h.handleMedia(ctx, msg.Media, p.User.Username)
+			if err != nil {
+				fmt.Printf("Error processing media from %s: %v\n", p.User.Username, err)
+			}
+		}()
 	}
 
 	return nil
