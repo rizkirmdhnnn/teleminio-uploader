@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/gotd/contrib/storage"
+	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
 	store "github.com/rizkirmdhnnn/teleminio-uploader/internal/storage"
 	"github.com/rizkirmdhnnn/teleminio-uploader/internal/utils"
@@ -19,17 +20,19 @@ type MessageHandler struct {
 	Minio      *store.MinioClient
 	PeerDB     storage.PeerStorage
 	UserTarget []string
+	Sender     *message.Sender
 	workerPool chan struct{}
 }
 
 // NewMessageHandler creates a new message handler
-func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClient, peerDB storage.PeerStorage, userTarget []string) *MessageHandler {
+func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClient, peerDB storage.PeerStorage, sender *message.Sender, userTarget []string) *MessageHandler {
 	return &MessageHandler{
 		Downloader: downloader,
 		Minio:      minio,
 		PeerDB:     peerDB,
 		UserTarget: userTarget,
-		workerPool: make(chan struct{}, 10), // Allow 5 concurrent operations
+		Sender:     sender,
+		workerPool: make(chan struct{}, 15), // Allow 5 concurrent operations
 	}
 }
 
@@ -109,5 +112,6 @@ func (h *MessageHandler) handleMedia(ctx context.Context, media tg.MessageMediaC
 	}
 
 	fmt.Printf("File uploaded to %s\n", url)
+	h.Sender.Self().Text(ctx, fmt.Sprintf("File uploaded to %s", url))
 	return nil
 }

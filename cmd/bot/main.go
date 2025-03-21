@@ -9,6 +9,7 @@ import (
 
 	"github.com/gotd/td/examples"
 	"github.com/gotd/td/telegram/auth"
+	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/telegram/updates"
 	"github.com/pkg/errors"
 	"github.com/rizkirmdhnnn/teleminio-uploader/internal/client"
@@ -47,8 +48,11 @@ func run(ctx context.Context) error {
 	mediaDir := filepath.Join(s.SessionDir, "media")
 	downloader := utils.NewMediaDownloader(clientSetup.API, mediaDir)
 
+	// Initialize sender
+	sender := message.NewSender(clientSetup.API)
+
 	// Initialize message handler
-	messageHandler := handler.NewMessageHandler(downloader, minio, s.PeerDB, cfg.UserTarget)
+	messageHandler := handler.NewMessageHandler(downloader, minio, s.PeerDB, sender, cfg.UserTarget)
 
 	// Handle new messages
 	clientSetup.Dispatcher.OnNewMessage(messageHandler.HandleNewMessage)

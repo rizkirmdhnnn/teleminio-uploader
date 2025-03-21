@@ -39,8 +39,7 @@ func (m *MediaDownloader) DownloadPhoto(ctx context.Context, photo *tg.Photo, us
 		return "", fmt.Errorf("failed to create directory structure: %w", err)
 	}
 
-	timestamp := time.Now().Format("20060102_150405")
-	fileName := filepath.Join(targetDir, fmt.Sprintf("photo_%s.jpg", timestamp))
+	fileName := filepath.Join(targetDir, fmt.Sprintf("photo_%d.jpg", photo.ID))
 
 	// Get the largest photo size
 	var largest *tg.PhotoSize
@@ -89,8 +88,7 @@ func (m *MediaDownloader) DownloadDocument(ctx context.Context, doc *tg.Document
 		return "", fmt.Errorf("failed to create directory structure: %w", err)
 	}
 
-	timestamp := time.Now().Format("20060102_150405")
-	fileName := filepath.Join(targetDir, fmt.Sprintf("doc_%s", timestamp))
+	fileName := filepath.Join(targetDir, fmt.Sprintf("doc_%d", doc.ID))
 
 	// Get original filename if available
 	for _, attr := range doc.Attributes {
