@@ -29,7 +29,7 @@ func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClie
 		Minio:      minio,
 		PeerDB:     peerDB,
 		UserTarget: userTarget,
-		workerPool: make(chan struct{}, 5), // Allow 5 concurrent operations
+		workerPool: make(chan struct{}, 10), // Allow 5 concurrent operations
 	}
 }
 
