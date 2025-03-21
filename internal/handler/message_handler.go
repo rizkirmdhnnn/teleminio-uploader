@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 
 	"slices"
 
 	"github.com/gotd/contrib/storage"
 	"github.com/gotd/td/telegram/message"
 	"github.com/gotd/td/tg"
+	"github.com/rizkirmdhnnn/teleminio-uploader/internal/config"
 	store "github.com/rizkirmdhnnn/teleminio-uploader/internal/storage"
 	"github.com/rizkirmdhnnn/teleminio-uploader/internal/utils"
 )
@@ -19,20 +21,30 @@ type MessageHandler struct {
 	Downloader *utils.MediaDownloader
 	Minio      *store.MinioClient
 	PeerDB     storage.PeerStorage
-	UserTarget []string
 	Sender     *message.Sender
-	workerPool chan struct{}
+	Config     config.Config
+	UserTarget []string
+	WorkerPool chan struct{}
 }
 
 // NewMessageHandler creates a new message handler
-func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClient, peerDB storage.PeerStorage, sender *message.Sender, userTarget []string) *MessageHandler {
+func NewMessageHandler(downloader *utils.MediaDownloader, minio *store.MinioClient, peerDB storage.PeerStorage, sender *message.Sender, cfg config.Config) *MessageHandler {
+	workerSize, err := strconv.Atoi(cfg.WORKER_POOL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse WORKER_POOL: %v\n", err)
+	}
+	if workerSize <= 0 {
+		workerSize = 5
+	}
+
 	return &MessageHandler{
 		Downloader: downloader,
 		Minio:      minio,
 		PeerDB:     peerDB,
-		UserTarget: userTarget,
+		UserTarget: cfg.UserTarget,
 		Sender:     sender,
-		workerPool: make(chan struct{}, 15), // Allow 5 concurrent operations
+		Config:     cfg,
+		WorkerPool: make(chan struct{}, workerSize),
 	}
 }
 
@@ -63,13 +75,13 @@ func (h *MessageHandler) HandleNewMessage(ctx context.Context, e tg.Entities, u 
 	// Process media if present
 	if msg.Media != nil {
 		// Acquire a worker from the pool
-		h.workerPool <- struct{}{}
+		h.WorkerPool <- struct{}{}
 
 		// Process media concurrently
 		go func() {
 			defer func() {
 				// Release the worker back to the pool
-				<-h.workerPool
+				<-h.WorkerPool
 			}()
 
 			err := h.handleMedia(ctx, msg.Media, p.User.Username)
@@ -112,6 +124,14 @@ func (h *MessageHandler) handleMedia(ctx context.Context, media tg.MessageMediaC
 	}
 
 	fmt.Printf("File uploaded to %s\n", url)
+
+	// Delete the file if configured
+	if h.Config.AUTO_REMOVE_MEDIA {
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("remove file: %w", err)
+		}
+	}
+
 	h.Sender.Self().Text(ctx, fmt.Sprintf("File uploaded to %s", url))
 	return nil
 }

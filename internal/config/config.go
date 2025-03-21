@@ -22,6 +22,9 @@ type Config struct {
 	MinioSSL       bool
 	MinioRegion    string
 	MinioEndpoint  string
+
+	AUTO_REMOVE_MEDIA bool
+	WORKER_POOL       string
 }
 
 // LoadConfig loads configuration from environment variables.
@@ -53,5 +56,8 @@ func LoadConfig() Config {
 		MinioSSL:       os.Getenv("MINIO_SSL") == "true",
 		MinioRegion:    os.Getenv("MINIO_REGION"),
 		MinioEndpoint:  os.Getenv("MINIO_ENDPOINT"),
+
+		AUTO_REMOVE_MEDIA: os.Getenv("AUTO_REMOVE_MEDIA") == "true",
+		WORKER_POOL:       os.Getenv("WORKER_POOL"),
 	}
 }

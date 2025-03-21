@@ -52,7 +52,7 @@ func run(ctx context.Context) error {
 	sender := message.NewSender(clientSetup.API)
 
 	// Initialize message handler
-	messageHandler := handler.NewMessageHandler(downloader, minio, s.PeerDB, sender, cfg.UserTarget)
+	messageHandler := handler.NewMessageHandler(downloader, minio, s.PeerDB, sender, cfg)
 
 	// Handle new messages
 	clientSetup.Dispatcher.OnNewMessage(messageHandler.HandleNewMessage)

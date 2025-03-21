@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
@@ -80,9 +79,7 @@ func (m *MediaDownloader) DownloadDocument(ctx context.Context, doc *tg.Document
 		}
 	}
 
-	// Create directory structure: mediaDir/username/mediaType/YYYYMMDD/
-	currentDate := time.Now().Format("20060102")
-	targetDir := filepath.Join(m.MediaDir, username, mediaTypeDir, currentDate)
+	targetDir := filepath.Join(m.MediaDir, username, mediaTypeDir)
 
 	if err := os.MkdirAll(targetDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory structure: %w", err)
@@ -114,11 +111,11 @@ func (m *MediaDownloader) DownloadMedia(ctx context.Context, media tg.MessageMed
 	case *tg.MessageMediaPhoto:
 		photo := med.Photo.(*tg.Photo)
 		file, err := m.DownloadPhoto(ctx, photo, username)
-		return file, filepath.Ext(file), err
+		return file, "photo", err
 	case *tg.MessageMediaDocument:
 		doc := med.Document.(*tg.Document)
 		file, err := m.DownloadDocument(ctx, doc, username)
-		return file, filepath.Ext(file), err
+		return file, doc.GetMimeType(), err
 	default:
 		return "", "", fmt.Errorf("unsupported media type")
 	}
